@@ -1,0 +1,41 @@
+name: Main Validation
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Full pipeline
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build (production)
+        run: pnpm build
+        env:
+          NODE_ENV: production
+
+  # Vercel deploys the dashboard on push to main via its own GitHub integration.
+  # This job only guards that the build that will be deployed is valid.

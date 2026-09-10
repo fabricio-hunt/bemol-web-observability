@@ -1,0 +1,48 @@
+name: Ingestion
+
+on:
+  schedule:
+    # 06:00 UTC daily. Adjust once real collector runtime/quota usage is known (Phase 2).
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  collect:
+    name: Run PSI/CrUX/GSC collectors
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run ingestion
+        run: pnpm --filter @bemol/ingestion start
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_WAREHOUSE_ID: ${{ secrets.DATABRICKS_WAREHOUSE_ID }}
+          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+          DATABRICKS_CATALOG: bemol_prod
+          DATABRICKS_SCHEMA: observability
+          PSI_API_KEY: ${{ secrets.PSI_API_KEY }}
+          GSC_SERVICE_ACCOUNT_KEY: ${{ secrets.GSC_SERVICE_ACCOUNT_KEY }}
+          GSC_SITE_URL: https://www.bemol.com.br/
+
+      - name: Notify Slack on failure
+        if: failure()
+        run: |
+          curl -sf -X POST -H 'Content-type: application/json' \
+            --data "{\"text\": \"Bemol Web Observability ingestion failed — run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}" \
+            "$SLACK_WEBHOOK_URL"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
