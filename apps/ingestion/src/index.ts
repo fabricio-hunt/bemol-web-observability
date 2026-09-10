@@ -1,9 +1,9 @@
 import path from "node:path";
 import { config } from "dotenv";
 import PQueue from "p-queue";
-import { DatabricksClient } from "@bemol/databricks-client";
+import { DbClient } from "@bemol/db-client";
 import type { CwvRun, CwvStrategy } from "@bemol/types";
-import { loadDatabricksConfig, loadGoogleApiKey } from "./config.js";
+import { loadDatabaseUrl, loadGoogleApiKey } from "./config.js";
 import { getPages } from "./repositories/pagesRepository.js";
 import { insertCwvRuns } from "./repositories/cwvRunsRepository.js";
 import { collectPsi, PsiCollectorError } from "./collectors/psi.js";
@@ -65,33 +65,37 @@ async function collectForPageStrategy(
  * checks are separate future phases (see ARCHITECTURE.md sections 11 and 5).
  */
 async function main(): Promise<void> {
-  const databricksClient = new DatabricksClient(loadDatabricksConfig());
+  const dbClient = new DbClient(loadDatabaseUrl());
   const apiKey = loadGoogleApiKey();
 
-  const pages = await getPages(databricksClient);
-  if (pages.length === 0) {
-    console.warn(
-      "No pages found in the `pages` table — nothing to collect. See sql/seed/001_pages.sql."
+  try {
+    const pages = await getPages(dbClient);
+    if (pages.length === 0) {
+      console.warn(
+        "No pages found in the `pages` table — nothing to collect. See sql/seed/001_pages.sql."
+      );
+      return;
+    }
+
+    const runs: CwvRun[] = [];
+    const errors: string[] = [];
+
+    await Promise.all(
+      pages.flatMap((page) =>
+        STRATEGIES.map((strategy) => collectForPageStrategy(page, strategy, apiKey, runs, errors))
+      )
     );
-    return;
-  }
 
-  const runs: CwvRun[] = [];
-  const errors: string[] = [];
+    console.log(`Collected ${runs.length} CWV runs across ${pages.length} page(s).`);
+    await insertCwvRuns(dbClient, runs);
+    console.log(`Inserted ${runs.length} row(s) into cwv_runs.`);
 
-  await Promise.all(
-    pages.flatMap((page) =>
-      STRATEGIES.map((strategy) => collectForPageStrategy(page, strategy, apiKey, runs, errors))
-    )
-  );
-
-  console.log(`Collected ${runs.length} CWV runs across ${pages.length} page(s).`);
-  await insertCwvRuns(databricksClient, runs);
-  console.log(`Inserted ${runs.length} row(s) into cwv_runs.`);
-
-  if (errors.length > 0) {
-    console.error(`${errors.length} collector error(s):\n${errors.join("\n")}`);
-    process.exitCode = 1;
+    if (errors.length > 0) {
+      console.error(`${errors.length} collector error(s):\n${errors.join("\n")}`);
+      process.exitCode = 1;
+    }
+  } finally {
+    await dbClient.end();
   }
 }
 

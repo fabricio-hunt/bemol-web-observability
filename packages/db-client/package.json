@@ -1,5 +1,5 @@
 {
-  "name": "@bemol/databricks-client",
+  "name": "@bemol/db-client",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -8,6 +8,9 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

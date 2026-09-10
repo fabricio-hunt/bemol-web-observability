@@ -1,53 +1,48 @@
--- Core Delta tables for bemol_prod.observability.
+-- Core tables for the observability schema.
 -- See ARCHITECTURE.md section 4 for the full data model and rationale.
 
-CREATE TABLE IF NOT EXISTS bemol_prod.observability.pages (
-  page_id     STRING NOT NULL COMMENT 'Stable identifier for a monitored URL',
-  url         STRING NOT NULL,
-  label       STRING COMMENT 'Human-readable label, e.g. "Home", "PDP - Eletronicos", "Checkout"',
-  category    STRING COMMENT 'Grouping used for rollups and dashboards, e.g. "PDP", "PLP", "Checkout"'
-)
-USING DELTA
-COMMENT 'Catalog of URLs monitored by the platform';
+CREATE TABLE IF NOT EXISTS observability.pages (
+  page_id     TEXT PRIMARY KEY,
+  url         TEXT NOT NULL,
+  label       TEXT,
+  category    TEXT
+);
 
-CREATE TABLE IF NOT EXISTS bemol_prod.observability.cwv_runs (
-  run_id             STRING NOT NULL,
-  page_id            STRING NOT NULL,
-  strategy           STRING NOT NULL COMMENT "'mobile' | 'desktop'",
-  source             STRING NOT NULL COMMENT "'lab' (PageSpeed Insights) | 'field' (CrUX)",
-  performance_score  DOUBLE,
-  lcp_ms             DOUBLE,
-  inp_ms             DOUBLE,
-  cls                DOUBLE,
-  fcp_ms             DOUBLE,
-  ttfb_ms            DOUBLE,
-  collected_at       TIMESTAMP NOT NULL
-)
-USING DELTA
-PARTITIONED BY (DATE(collected_at))
-COMMENT 'Per-URL Core Web Vitals measurements from PSI (lab) and CrUX (field)';
+CREATE TABLE IF NOT EXISTS observability.cwv_runs (
+  run_id             UUID PRIMARY KEY,
+  page_id            TEXT NOT NULL REFERENCES observability.pages (page_id),
+  strategy           TEXT NOT NULL CHECK (strategy IN ('mobile', 'desktop')),
+  source             TEXT NOT NULL CHECK (source IN ('lab', 'field')),
+  performance_score  DOUBLE PRECISION,
+  lcp_ms             DOUBLE PRECISION,
+  inp_ms             DOUBLE PRECISION,
+  cls                DOUBLE PRECISION,
+  fcp_ms             DOUBLE PRECISION,
+  ttfb_ms            DOUBLE PRECISION,
+  collected_at       TIMESTAMPTZ NOT NULL
+);
 
-CREATE TABLE IF NOT EXISTS bemol_prod.observability.gsc_cwv_daily (
+CREATE INDEX IF NOT EXISTS idx_cwv_runs_page_collected
+  ON observability.cwv_runs (page_id, collected_at DESC);
+
+CREATE TABLE IF NOT EXISTS observability.gsc_cwv_daily (
   snapshot_date  DATE NOT NULL,
-  device         STRING NOT NULL COMMENT "'mobile' | 'desktop'",
-  status         STRING NOT NULL COMMENT "'poor' | 'needs_improvement' | 'good'",
-  url_count      BIGINT NOT NULL
-)
-USING DELTA
-COMMENT 'Site-wide CWV status bucket counts. See ARCHITECTURE.md section 5 for the data-source decision.';
+  device         TEXT NOT NULL CHECK (device IN ('mobile', 'desktop')),
+  status         TEXT NOT NULL CHECK (status IN ('poor', 'needs_improvement', 'good')),
+  url_count      BIGINT NOT NULL,
+  PRIMARY KEY (snapshot_date, device, status)
+);
 
--- Gold layer: refreshed nightly by a Databricks Job from cwv_runs.
--- The dashboard reads exclusively from this table (see ARCHITECTURE.md section 4).
-CREATE TABLE IF NOT EXISTS bemol_prod.observability.cwv_daily_agg (
-  page_id           STRING NOT NULL,
+-- Gold layer: refreshed by a scheduled GitHub Actions job (no pg_cron on
+-- Neon's free tier). The dashboard reads exclusively from this table.
+CREATE TABLE IF NOT EXISTS observability.cwv_daily_agg (
+  page_id           TEXT NOT NULL REFERENCES observability.pages (page_id),
   date              DATE NOT NULL,
-  avg_performance   DOUBLE,
-  avg_lcp_ms        DOUBLE,
-  avg_inp_ms        DOUBLE,
-  avg_cls           DOUBLE,
-  trend_7d_delta    DOUBLE,
-  trend_30d_delta   DOUBLE
-)
-USING DELTA
-PARTITIONED BY (date)
-COMMENT 'Pre-aggregated daily rollups per page, consumed by the dashboard read path';
+  avg_performance   DOUBLE PRECISION,
+  avg_lcp_ms        DOUBLE PRECISION,
+  avg_inp_ms        DOUBLE PRECISION,
+  avg_cls           DOUBLE PRECISION,
+  trend_7d_delta    DOUBLE PRECISION,
+  trend_30d_delta   DOUBLE PRECISION,
+  PRIMARY KEY (page_id, date)
+);

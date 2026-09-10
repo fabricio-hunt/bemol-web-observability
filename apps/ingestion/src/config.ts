@@ -6,15 +6,9 @@ function requireEnv(name: string): string {
   return value;
 }
 
-export function loadDatabricksConfig() {
-  return {
-    host: requireEnv("DATABRICKS_HOST"),
-    clientId: requireEnv("DATABRICKS_CLIENT_ID"),
-    clientSecret: requireEnv("DATABRICKS_CLIENT_SECRET"),
-    warehouseId: requireEnv("DATABRICKS_WAREHOUSE_ID"),
-    catalog: process.env.DATABRICKS_CATALOG ?? "bemol_prod",
-    schema: process.env.DATABRICKS_SCHEMA ?? "observability",
-  };
+/** Connection string for the `bemol_ingestion` role (SELECT + INSERT). */
+export function loadDatabaseUrl(): string {
+  return requireEnv("DATABASE_URL");
 }
 
 /**

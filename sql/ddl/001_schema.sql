@@ -1,5 +1,4 @@
--- Unity Catalog schema for the Bemol Web Observability platform.
--- Run once against the target Databricks workspace/catalog.
+-- Postgres schema for the Bemol Web Observability platform (Neon).
+-- Run once against the target Neon database.
 
-CREATE SCHEMA IF NOT EXISTS bemol_prod.observability
-COMMENT 'Core Web Vitals, technical SEO, and Search Console data for bemol.com.br observability';
+CREATE SCHEMA IF NOT EXISTS observability;

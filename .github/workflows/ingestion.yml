@@ -28,12 +28,7 @@ jobs:
       - name: Run ingestion
         run: pnpm --filter @bemol/ingestion start
         env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-          DATABRICKS_WAREHOUSE_ID: ${{ secrets.DATABRICKS_WAREHOUSE_ID }}
-          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
-          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
-          DATABRICKS_CATALOG: bemol_prod
-          DATABRICKS_SCHEMA: observability
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           PSI_API_KEY: ${{ secrets.PSI_API_KEY }}
           GSC_SERVICE_ACCOUNT_KEY: ${{ secrets.GSC_SERVICE_ACCOUNT_KEY }}
           GSC_SITE_URL: https://www.bemol.com.br/

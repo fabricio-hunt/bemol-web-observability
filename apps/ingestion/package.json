@@ -11,7 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@bemol/databricks-client": "workspace:*",
+    "@bemol/db-client": "workspace:*",
     "@bemol/types": "workspace:*",
     "dotenv": "^16.4.7",
     "p-queue": "^8.0.1"

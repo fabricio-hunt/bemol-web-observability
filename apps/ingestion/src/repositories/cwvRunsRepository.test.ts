@@ -4,7 +4,7 @@ import { buildInsertStatement } from "./cwvRunsRepository.js";
 
 function makeRun(overrides: Partial<CwvRun> = {}): CwvRun {
   return {
-    runId: "run-1",
+    runId: "11111111-1111-1111-1111-111111111111",
     pageId: "home",
     strategy: "mobile",
     source: "lab",
@@ -20,20 +20,24 @@ function makeRun(overrides: Partial<CwvRun> = {}): CwvRun {
 }
 
 describe("buildInsertStatement", () => {
-  it("builds one VALUES tuple per run with indexed named parameters", () => {
-    const { statement, parameters } = buildInsertStatement([makeRun(), makeRun({ runId: "run-2", pageId: "pdp-1" })]);
+  it("builds one VALUES tuple per run with sequential $n placeholders", () => {
+    const { statement, params } = buildInsertStatement([
+      makeRun(),
+      makeRun({ runId: "22222222-2222-2222-2222-222222222222", pageId: "pdp-1" }),
+    ]);
 
-    expect(statement).toContain("INSERT INTO cwv_runs");
-    expect(statement).toMatch(/VALUES \(:run_id_0, .*\), \(:run_id_1, .*\)/);
-    expect(parameters).toContainEqual({ name: "run_id_0", value: "run-1" });
-    expect(parameters).toContainEqual({ name: "page_id_1", value: "pdp-1" });
+    expect(statement).toContain("INSERT INTO observability.cwv_runs");
+    expect(statement).toMatch(/VALUES \(\$1, .*\$11\), \(\$12, .*\$22\)/);
     // 11 columns * 2 runs
-    expect(parameters).toHaveLength(22);
+    expect(params).toHaveLength(22);
+    expect(params[0]).toBe("11111111-1111-1111-1111-111111111111");
+    expect(params[11]).toBe("22222222-2222-2222-2222-222222222222");
   });
 
   it("passes null values through for missing metrics rather than stringifying them", () => {
-    const { parameters } = buildInsertStatement([makeRun({ inpMs: null })]);
+    const { params } = buildInsertStatement([makeRun({ inpMs: null })]);
 
-    expect(parameters).toContainEqual({ name: "inp_ms_0", value: null });
+    // inp_ms is the 7th column (index 6)
+    expect(params[6]).toBeNull();
   });
 });
