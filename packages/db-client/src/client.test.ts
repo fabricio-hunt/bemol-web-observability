@@ -1,22 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const queryMock = vi.fn();
-const endMock = vi.fn();
+const sqlMock = vi.fn();
+const neonMock = vi.fn(() => sqlMock);
 
 vi.mock("@neondatabase/serverless", () => ({
-  Pool: vi.fn().mockImplementation(() => ({ query: queryMock, end: endMock })),
+  neon: neonMock,
 }));
 
 const { DbClient } = await import("./client.js");
 
 describe("DbClient", () => {
   beforeEach(() => {
-    queryMock.mockReset();
-    endMock.mockReset();
+    sqlMock.mockReset();
+    neonMock.mockClear();
   });
 
   it("returns rows from a query", async () => {
-    queryMock.mockResolvedValueOnce({ rows: [{ page_id: "home" }] });
+    sqlMock.mockResolvedValueOnce([{ page_id: "home" }]);
 
     const client = new DbClient("postgres://test");
     const rows = await client.query<{ page_id: string }>(
@@ -24,25 +24,24 @@ describe("DbClient", () => {
     );
 
     expect(rows).toEqual([{ page_id: "home" }]);
-    expect(queryMock).toHaveBeenCalledWith("SELECT page_id FROM observability.pages", []);
+    expect(sqlMock).toHaveBeenCalledWith("SELECT page_id FROM observability.pages", []);
   });
 
-  it("passes parameters through to the underlying pool", async () => {
-    queryMock.mockResolvedValueOnce({ rows: [] });
+  it("passes parameters through to the underlying driver", async () => {
+    sqlMock.mockResolvedValueOnce([]);
 
     const client = new DbClient("postgres://test");
     await client.execute("INSERT INTO observability.pages (page_id) VALUES ($1)", ["home"]);
 
-    expect(queryMock).toHaveBeenCalledWith(
+    expect(sqlMock).toHaveBeenCalledWith(
       "INSERT INTO observability.pages (page_id) VALUES ($1)",
       ["home"]
     );
   });
 
-  it("closes the underlying pool", async () => {
+  it("end() resolves without needing a real connection to close", async () => {
     const client = new DbClient("postgres://test");
-    await client.end();
 
-    expect(endMock).toHaveBeenCalledOnce();
+    await expect(client.end()).resolves.toBeUndefined();
   });
 });
