@@ -5,7 +5,7 @@ A Core Web Vitals and technical SEO observability platform, built to monitor pro
 [![Node](https://img.shields.io/badge/node-22.x-339933?logo=node.js&logoColor=white)](.nvmrc)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](tsconfig.base.json)
 [![pnpm](https://img.shields.io/badge/pnpm-workspaces-F69220?logo=pnpm&logoColor=white)](pnpm-workspace.yaml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-lightgrey.svg)](LICENSE)
 
 > **Status:** early-stage, actively developed. Phases 1–2 of the roadmap (below) are implemented and verified against a live database; Phases 3–6 are not yet built. This README states current capabilities plainly and marks planned work as planned — see [Roadmap](#roadmap).
 
@@ -34,7 +34,6 @@ A Core Web Vitals and technical SEO observability platform, built to monitor pro
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
-- [Author](#author)
 
 ---
 
@@ -471,26 +470,10 @@ No AWS/Azure/GCP compute is provisioned. Google Cloud is used **only** for API k
 
 ## Contributing
 
-This started as a focused, single-maintainer project, but issues and pull requests are welcome.
-
-1. Fork the repository and create a feature branch (`feat/short-description`).
-2. Follow [Conventional Commits](https://www.conventionalcommits.org/) for commit messages.
-3. Run `pnpm lint && pnpm typecheck && pnpm test && pnpm build` before opening a PR — this is exactly what CI will run.
-4. Open a PR describing the change and its motivation; link any relevant issue.
+This is a closed, internal Bemol project. It does not accept external contributions, issues, or pull requests. Internal changes follow the same CI gate as any branch: `pnpm lint && pnpm typecheck && pnpm test && pnpm build` must pass before merge.
 
 ---
 
 ## License
 
-Distributed under the MIT License. See [`LICENSE`](./LICENSE) for the full text.
-
----
-
-## Author
-
-**Fabricio Barauna**
-Software Engineer · Cloud & Platform Engineering
-
-- GitHub: [@fabricio-hunt](https://github.com/fabricio-hunt)
-- LinkedIn: _add your LinkedIn URL here_
-- Portfolio: _add your portfolio URL here_
+Proprietary and confidential — © Bemol S.A. All rights reserved. See [`LICENSE`](./LICENSE). No permission is granted to use, copy, modify, or distribute this software outside of Bemol S.A.
