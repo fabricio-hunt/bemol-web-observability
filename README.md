@@ -48,7 +48,11 @@ Apply the DDL in `sql/ddl/` (in order) against the target Databricks SQL Warehou
 
 ## Status
 
-This repository is at **Phase 1** of the roadmap in `ARCHITECTURE.md`: foundations and
-provisioning. The PSI/CrUX/GSC collectors, the gold-layer aggregation job, and the dashboard's
-data-fetching logic are not yet implemented — only the project scaffolding and the
-`DatabricksClient` used by both the ingestion job and the dashboard.
+This repository has completed **Phase 1** (foundations/provisioning) and **Phase 2** (ingestion
+MVP) of the roadmap in `ARCHITECTURE.md`: the PSI (lab) and CrUX (field) collectors run against
+the URL catalog in `pages` and batch-insert results into `cwv_runs`. Not yet implemented: GSC
+Search Analytics ingestion, the nightly gold-layer aggregation job, the dashboard's data-fetching
+logic, and regression detection/alerting (Phases 3-5).
+
+Before running ingestion for the first time, apply `sql/seed/001_pages.sql` to seed the `pages`
+table (currently just the homepage — extend with the full URL catalog when available).

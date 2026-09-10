@@ -16,3 +16,11 @@ export function loadDatabricksConfig() {
     schema: process.env.DATABRICKS_SCHEMA ?? "observability",
   };
 }
+
+/**
+ * Shared Google API key used by both the PSI and CrUX collectors.
+ * Must be restricted (in GCP) to "PageSpeed Insights API" + "Chrome UX Report API".
+ */
+export function loadGoogleApiKey(): string {
+  return requireEnv("PSI_API_KEY");
+}
