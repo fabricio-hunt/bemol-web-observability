@@ -59,7 +59,10 @@ pnpm --filter @bemol/ingestion start   # run the ingestion collectors once
 
 This repository has completed **Phase 1** (foundations/provisioning) and **Phase 2** (ingestion
 MVP) of the roadmap in `ARCHITECTURE.md`, migrated from an earlier Databricks-based design to
-Neon Postgres (see `HANDOFF.md`): the PSI (lab) and CrUX (field) collectors run against the URL
-catalog in `pages` and batch-insert results into `cwv_runs`. Not yet implemented: GSC Search
-Analytics ingestion, the nightly gold-layer aggregation job, the dashboard's data-fetching logic,
-and regression detection/alerting (Phases 3-5).
+Neon Postgres (see `HANDOFF.md`). Verified end-to-end against the live Neon project: the PSI
+(lab) collector successfully collected and inserted real Core Web Vitals data for the Bemol
+homepage into `cwv_runs`. The CrUX (field) collector is implemented but currently blocked — the
+Chrome UX Report API still needs to be enabled in GCP (`403 API_KEY_SERVICE_BLOCKED`).
+
+Not yet implemented: GSC Search Analytics ingestion, the nightly gold-layer aggregation job, the
+dashboard's data-fetching logic, and regression detection/alerting (Phases 3-5).

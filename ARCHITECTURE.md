@@ -119,7 +119,7 @@ The CWV report as seen in the Search Console UI (Poor/Needs Improvement/Good buc
   - `bemol_dashboard` — `SELECT` only on `observability.*`. Used only by the Vercel-deployed dashboard.
   - Connection strings use Neon's **pooled** endpoint (`-pooler` host) to stay serverless-friendly.
 - **Google Search Console**: service account (already provisioned) with Search Analytics read access.
-- **PageSpeed Insights / Chrome UX Report**: a single Google API key, restricted in GCP to those two APIs (see `.env.example`).
+- **PageSpeed Insights / Chrome UX Report**: a single Google API key (see `.env.example`), intended to be restricted in GCP to both APIs. As of this writing only the PageSpeed Insights API restriction is in place — the Chrome UX Report API is not yet enabled on the key, so CrUX collection currently fails with `403 API_KEY_SERVICE_BLOCKED` (see `HANDOFF.md`).
 - **Secrets**: GitHub Secrets (ingestion workflow), Vercel environment variables (dashboard). Never hardcoded, never committed — `sql/ddl/003_roles.sql` uses a placeholder password that must be replaced before running.
 - Validate and sanitize all external inputs (API responses, URLs) before processing or storing.
 
@@ -165,8 +165,8 @@ The CWV report as seen in the Search Console UI (Poor/Needs Improvement/Good buc
 
 | Phase | Scope |
 |---|---|
-| **1 — Foundations & provisioning** | Git init + repo scaffolding (monorepo: dashboard app + ingestion package); Neon project + `observability` schema/tables/roles; provision PSI/CrUX API key; CI skeleton (lint/test/build on PR) — ✅ done (originally against Databricks, migrated to Neon) |
-| **2 — Ingestion MVP** | `@bemol/db-client` wrapper around `@neondatabase/serverless`; PSI collector for a small seed URL list; CrUX collector; GitHub Actions scheduled workflow + `workflow_dispatch`; Slack failure alerting — ✅ done (migrated from the original Databricks client) |
+| **1 — Foundations & provisioning** | Git init + repo scaffolding (monorepo: dashboard app + ingestion package); Neon project + `observability` schema/tables/roles; provision PSI/CrUX API key; CI skeleton (lint/test/build on PR) — ✅ done and verified against the live Neon project |
+| **2 — Ingestion MVP** | `@bemol/db-client` wrapper around `@neondatabase/serverless`; PSI collector for a small seed URL list; CrUX collector; GitHub Actions scheduled workflow + `workflow_dispatch`; Slack failure alerting — ✅ PSI verified end-to-end against real Neon (homepage data collected and inserted); CrUX collector is implemented but blocked until the Chrome UX Report API is enabled in GCP (§6) |
 | **3 — Gold layer & dashboard MVP** | Scheduled GitHub Actions job computing `cwv_daily_agg`; Next.js dashboard (Server Components, read-only) rendering current CWV + trends with Recharts; deploy to Vercel — not started |
 | **4 — GSC Search Analytics integration** | Service-account auth; `searchanalytics.query` ingestion (Pages/Queries/Country/Device); correlation views joining CWV and Search Analytics data |
 | **5 — Regression detection & alerting** | 7-day rolling comparison job; threshold-based alerts; surface alerts in the dashboard |
