@@ -32,3 +32,6 @@ Thumbs.db
 
 # Turbo/Next cache
 .turbo/
+
+# Local Claude Code tooling state
+.claude/

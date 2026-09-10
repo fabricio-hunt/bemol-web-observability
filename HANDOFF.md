@@ -42,15 +42,25 @@ changed in the codebase as a result.
 - `apps/ingestion/src/collectors/psi.ts`, `crux.ts`, and `packages/types` were **not changed** —
   they were already database-agnostic.
 
-## What's still pending (unchanged by this migration)
+## Verified end-to-end (2026-09-10)
 
-Per `ARCHITECTURE.md` §11:
+The Neon project is live, `sql/ddl/001-003` and `sql/seed/001_pages.sql` have been applied, and
+`DATABASE_URL`/`.env.local` are configured. A real local run of `pnpm --filter @bemol/ingestion
+start` successfully collected PSI (lab) data for the Bemol homepage and inserted it into
+`observability.cwv_runs` in Neon — the full ingestion pipeline works end to end.
 
-- **Phase 1 setup step still needed:** actually create the Neon project, run `sql/ddl/*.sql` and
-  `sql/seed/001_pages.sql` against it, and set `DATABASE_URL` as a GitHub secret and in
-  `.env.local`. Code is ready; infra isn't provisioned yet.
-- Enable the **Chrome UX Report API** in GCP and broaden the existing `PSI_API_KEY`'s
-  restriction to cover both APIs (still pending from before the migration).
+One fix made along the way: `packages/db-client` originally used `Pool` (WebSocket) from
+`@neondatabase/serverless`, which failed in plain Node.js ("All attempts to open a WebSocket...
+fetch failed") — switched to `neon()`, the HTTP-based query function, which needs no extra
+runtime configuration and fits this client's one-query-at-a-time usage better anyway.
+
+## What's still pending
+
+- **Chrome UX Report API not yet enabled in GCP** — CrUX collection currently fails with
+  `403 API_KEY_SERVICE_BLOCKED`. Enable the API and broaden `PSI_API_KEY`'s restriction to cover
+  both "PageSpeed Insights API" and "Chrome UX Report API" (see `ARCHITECTURE.md` §6).
+- `DASHBOARD_DATABASE_URL` (the `bemol_dashboard` read-only role's connection string) hasn't been
+  set anywhere yet — needed once Phase 3 starts.
 - Phase 3 (gold-layer aggregation job + dashboard read path) — not started.
 - Phases 4–6 (GSC Search Analytics, regression detection/alerting, technical SEO monitoring,
   full-catalog scale-out) — not started.
